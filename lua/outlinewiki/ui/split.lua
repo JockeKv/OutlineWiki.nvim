@@ -36,7 +36,7 @@ return function(cwin)
 
   -- Reload
   split:map("n", "R", function()
-    -- reload()
+    tree:refresh()
   end, map_options)
 
   -- Interact
@@ -51,7 +51,7 @@ return function(cwin)
       tree:render()
     else
       if node.id then
-        document.open(node.id, cwin)
+        node.buf = document.open(node.id, cwin, node.buf)
         vim.api.nvim_set_current_win(cwin)
       end
     end

@@ -9,16 +9,31 @@ This is the homepage for outline!
 ]],
 }
 
-M.open = function (id, win)
+---Open Document with id 'id' in window 'win'
+---Returns the bufnr of the opened buffer
+---Optional: If 'buf' is passes, check if the Document is loaded and open the buffer instead
+---@param id DocumentID
+---@param win integer
+---@param buf? integer
+---@return integer|nil
+M.open = function (id, win, buf)
   if id == "home" then
     return util.open_buffer(win,"OutlineWikiHome", M.home_page, {filetype = "markdown", buftype = "nofile", modified = false})
+  end
+
+  if buf then
+    local ok, buf_id = pcall(vim.api.nvim_buf_get_var, buf, "outline_id")
+    if ok and (buf_id == id) then
+      vim.api.nvim_win_set_buf(win, buf)
+      return buf
+    end
   end
 
   local s, doc = api.get_document(id)
   if s > 200 then print(doc); return end
 
   doc.url = doc.url:gsub('doc', 'outline/doc')
-  local buf = util.open_buffer(win,doc.url, doc.text, {filetype = "markdown", buftype = "acwrite", modified = false})
+  buf = util.open_buffer(win,doc.url, doc.text, {filetype = "markdown", buftype = "acwrite", modified = false})
   vim.api.nvim_buf_set_var(buf, "outline_id", doc.id)
 
   vim.api.nvim_clear_autocmds({event = "BufWriteCmd", buffer = buf})
