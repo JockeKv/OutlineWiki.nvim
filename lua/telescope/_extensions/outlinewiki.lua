@@ -9,11 +9,12 @@ return require("telescope").register_extension({
 		end
 	end,
 	exports = {
-		list = function()
-			print("Start")
+		open = function()
+		  require("outlinewiki.telescope").open(opts)
 		end,
-		save = function()
-      print("Save")
+		create = function()
+      print("create")
 		end,
 	},
 })
+

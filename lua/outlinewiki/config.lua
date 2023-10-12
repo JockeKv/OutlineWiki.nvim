@@ -8,6 +8,7 @@ M.setup = function (opts)
   for key, value in pairs(config) do
     M[key] = value
   end
+  require('telescope').load_extension 'outlinewiki'
   return M
 end
 
