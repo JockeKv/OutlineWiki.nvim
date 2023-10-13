@@ -12,19 +12,24 @@ local function get_tab()
   end
 end
 
+
 local function is_open()
-  local wins = vim.api.nvim_tabpage_list_wins(0)
-  for _, win in pairs(wins) do
-    local ok, ft = pcall(vim.fn.getwinvar, win, "filetype")
-    if ok and (ft == "OutlineMenu") then return win end
+  local tab = vim.api.nvim_get_current_tabpage()
+  local wins = vim.api.nvim_tabpage_list_wins(tab)
+  for _, win in ipairs(wins) do
+    local buf = vim.api.nvim_win_get_buf(win)
+    local ft = vim.api.nvim_get_option_value("filetype", { buf = buf })
+    if (ft == "OutlineMenu") then return win end
   end
 end
 
 UI.open = function ()
-  if is_open() then
-    print("Open")
+  local win = is_open()
+  if win then
+    vim.api.nvim_set_current_win(win)
+    return
   end
-  local win = vim.api.nvim_get_current_win()
+  win = vim.api.nvim_get_current_win()
   split(win)
 end
 

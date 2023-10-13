@@ -24,7 +24,6 @@ return function(cwin)
   local map_options = { noremap = true, nowait = true }
 
   split:on("BufEnter", function ()
-    print("BufEnter "..split.bufnr)
     tree.bufnr = split.bufnr
     tree:render()
   end, { once = false })
