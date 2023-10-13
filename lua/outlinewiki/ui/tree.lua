@@ -36,7 +36,7 @@ local tree = NuiTree({
 
     line:append(node.text)
 
-    if node.type == "document" and node.tasks.total > 0 then
+    if node.type == "document" and node.tasks and node.tasks.total > 0 then
       line:append(" ["..node.tasks.completed.."/"..node.tasks.total.."]", "Comment")
     end
     return line
