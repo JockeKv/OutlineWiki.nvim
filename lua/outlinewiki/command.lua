@@ -1,4 +1,5 @@
 local ui = require("outlinewiki.ui")
+local telescope = require("outlinewiki.telescope")
 local document = require("outlinewiki.document")
 
 local M = {
@@ -8,8 +9,7 @@ local M = {
     end,
     menu = ui.open,
     menu_tab = ui.tab_open,
-    open = function (opts)
-    end,
+    open = telescope.open,
 
   },
   open = function ()

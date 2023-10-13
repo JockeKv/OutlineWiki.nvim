@@ -8,7 +8,6 @@ local make_entry = require("telescope.make_entry")
 local entry_display = require("telescope.pickers.entry_display")
 
 local document = require("outlinewiki.document")
-local tree = require("outlinewiki.ui.tree")
 
 M = {}
 
@@ -16,11 +15,11 @@ M = {}
 --- Node parsing
 
 local function get_parent(node)
-  return tree.nodes.by_id[node._parent_id]
+  return require("outlinewiki.ui.tree").nodes.by_id[node._parent_id]
 end
 
 local function get_node(id)
-  return tree.nodes.by_id[id]
+  return require("outlinewiki.ui.tree").nodes.by_id[id]
 end
 
 local function get_children(node)
@@ -32,14 +31,16 @@ local function get_children(node)
 end
 
 local function get_documents(draft)
+  local tree = require("outlinewiki.ui.tree")
   local docs = {}
   for k, node in pairs(tree.nodes.by_id) do
     if (node.type == "document") or (draft and node.type == "draft") then
       table.insert(docs,  {
         title = node.text,
         collection = get_parent(node).text,
-        tasks = node.tasks or { completed = 0, total = 0 },
+        tasks = node.tasks,
         id = node.id,
+        buf = node.buf,
         type = (node.type == "document" and "DOC") or (node.type == "draft" and "DFT")
       })
     end
@@ -60,17 +61,19 @@ local document_display = entry_display.create {
   },
 }
 
-local function document_entry (entry, opts)
+local function document_entry (entry)
   return {
     value = entry.id,
     ordinal = entry.title,
     entry = entry,
     display = function (e)
+      local ent = e.entry
+      local tasks = (ent.tasks and ent.tasks.total > 1 and ent.tasks.completed.."/"..e.entry.tasks.total) or "None"
       return document_display {
-        { e.entry.type, "TelescopeResultsNumber" },
-        { e.entry.tasks.completed.."/"..e.entry.tasks.total, "TelescopeResultsComment" },
-        { e.entry.collection, "Boolean" },
-        e.entry.title,
+        { ent.type, "TelescopeResultsNumber" },
+        { tasks, "TelescopeResultsComment" },
+        { ent.collection, "Boolean" },
+        ent.title,
       }
       end,
   }
@@ -82,6 +85,7 @@ end
 --- vim.api.nvim_put
 
 M.open = function (opts)
+  local tree = require("outlinewiki.ui.tree")
   opts = opts or {}
   opts.find_command = opts.find_command or { "ls" }
   -- make file icon (make_entry.gen_from_file(opts))
@@ -97,8 +101,8 @@ M.open = function (opts)
         actions.select_default:replace(function()
           actions.close(prompt_bufnr)
           local selection = action_state.get_selected_entry()
-          print(vim.inspect(selection))
-          document.open(selection.value, opts.win)
+          local buf = document.open(selection.value, opts.win, selection.entry.buf)
+          tree:get_node("-"..selection.value).buf = buf
         end)
         map("n", "<cr>", (function()
           local selection = action_state.get_selected_entry()
@@ -106,8 +110,19 @@ M.open = function (opts)
           print(vim.inspect(selection))
           return selection
         end))
-        map("n", "d", (function()
+        map("n", "p", (function()
           local selection = action_state.get_selected_entry()
+          if selection.entry.type == "DOC" then
+            -- print(selection.value)
+            if document.publish(selection.value) then
+              tree:get_node("-"..selection.value).type = "draft"
+            end
+          elseif selection.entry.type == "DFT" then
+            -- print(selection.value)
+            if document.unpublish(selection.value) then
+              tree:get_node("-"..selection.value).type = "document"
+            end
+          end
           return selection
         end))
         return true
