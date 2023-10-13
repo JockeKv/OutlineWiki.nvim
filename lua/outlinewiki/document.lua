@@ -2,6 +2,7 @@ local api = require"outlinewiki.api"
 local util = require"outlinewiki.util"
 
 local M = {
+  comp_list = nil,
   home_page = [[
 # Home
 
@@ -67,10 +68,24 @@ M.open = function (id, win, buf)
   return buf
 end
 
+M.complist = function (force)
+  if M.comp_list == nil then
+    local list = {}
+    for _, doc in ipairs(M.list(true)) do
+      local url = "/doc/"..string.lower(doc.title):gsub(" ", "-").."-"..doc.urlId
+      table.insert(list, {
+        title = doc.title,
+        url = url,
+      })
+    end
+    M.comp_list = list
+  end
+  return M.comp_list
+end
 ---Get all documents
 ---@param drafts? boolean If true, return drafts as well
 ---@return nil|List<table>
-M.list = function (drafts)
+M.list = function (drafts, force)
   local s, documents = api.get_documents()
   if s > 200 then print(documents); return end
 
@@ -161,8 +176,8 @@ M.history = function(doc)
   return doc
 end
 
-M.publish = function (doc)
-  local status, error = api.save_document({id = doc, publish = true})
+M.publish = function (id)
+  local status, error = api.save_document({id = id, publish = true})
 
   if status == 200 then
     print("Document saved!")
@@ -173,8 +188,8 @@ M.publish = function (doc)
   end
 end
 
-M.unpublish = function (doc)
-  local status, error = api.unpublish_document(doc)
+M.unpublish = function (id)
+  local status, error = api.unpublish_document(id)
 
   if status == 200 then
     print("Document saved!")
