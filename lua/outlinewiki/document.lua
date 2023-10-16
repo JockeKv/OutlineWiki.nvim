@@ -72,9 +72,10 @@ M.complist = function (force)
   if M.comp_list == nil then
     local list = {}
     for _, doc in ipairs(M.list(true)) do
-      local url = "/doc/"..string.lower(doc.title):gsub(" ", "-").."-"..doc.urlId
+      local title = doc.title:gsub("\n", "")
+      local url = "/doc/"..string.lower(title):gsub(" ", "-").."-"..doc.urlId
       table.insert(list, {
-        title = doc.title,
+        title = title,
         url = url,
       })
     end
