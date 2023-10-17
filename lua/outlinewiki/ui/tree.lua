@@ -1,7 +1,7 @@
 local api = require"outlinewiki.api"
 local NuiLine = require("nui.line")
 local NuiTree = require("nui.tree")
-local document = require("outlinewiki.document")
+local documents = require("outlinewiki.documents")
 local util = require("outlinewiki.util")
 
 
@@ -47,7 +47,7 @@ tree.refresh = function (self)
   local s, collections = api.get_collections()
   if s > 200 then print(collections); return end
 
-  local documents = document.list(true)
+  local documents = documents.list(true)
   if documents == nil then return end
 
   local nodes = {}

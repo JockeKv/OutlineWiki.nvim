@@ -1,5 +1,5 @@
 local split = require("outlinewiki.ui.split")
-local document = require("outlinewiki.document")
+local documents = require("outlinewiki.documents")
 
 local UI = {
 }
@@ -43,7 +43,7 @@ UI.tab_open = function ()
   vim.api.nvim_tabpage_set_var(0, "tabname", "OutlineWiki")
   local win = vim.api.nvim_get_current_win()
   split(win)
-  document.open("home", win)
+  documents.open("home", win)
 end
 
 return UI

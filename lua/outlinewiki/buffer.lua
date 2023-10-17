@@ -1,7 +1,7 @@
 local ls = require("luasnip")
 local ts_utils = require("nvim-treesitter.ts_utils")
 
-local document = require("outlinewiki.document")
+local documents = require("outlinewiki.documents")
 
 local M = {}
 
@@ -32,7 +32,7 @@ M.gotoDoc = function ()
 
   if not (dest == "") then
     if dest:find("/doc/") then
-      document.open(dest:gsub("/doc/", ""), vim.api.nvim_get_current_win())
+      documents.open(dest:gsub("/doc/", ""), vim.api.nvim_get_current_win())
     end
   end
 end
@@ -41,7 +41,7 @@ end
 -- TODO: By adding snippets this way, they can't be updated later.
 --       Think of a way to manage these better
 local snips = {}
-local comp = document.complist()
+local comp = documents.complist()
 for _, doc in ipairs(comp) do
   table.insert(snips, ls.snippet("["..doc.title.."]", { ls.text_node("["..doc.title.."]("..doc.url..")") }))
 end

@@ -2,7 +2,7 @@ local NuiTree = require("nui.tree")
 local Split = require("nui.split")
 
 local popup = require"outlinewiki.ui.popup"
-local document = require"outlinewiki.document"
+local documents = require"outlinewiki.documents"
 local api = require"outlinewiki.api"
 
 return function(cwin)
@@ -50,7 +50,7 @@ return function(cwin)
       tree:render()
     else
       if node.id then
-        node.buf = document.open(node.id, cwin, node.buf)
+        node.buf = documents.open(node.id, cwin, node.buf)
         vim.api.nvim_set_current_win(cwin)
       end
     end
@@ -63,9 +63,9 @@ return function(cwin)
     elseif node.type == "collection" then
       local name = vim.fn.input("Name: ", "")
       if not (name == "") then
-        local doc = document.create(name, node.id)
+        local doc = documents.create(name, node.id)
         if doc then
-          document.open(doc.id, cwin)
+          documents.open(doc.id, cwin)
           vim.api.nvim_set_current_win(cwin)
           tree:add_node(
             NuiTree.Node({ text = doc.title:gsub("\n",""), id = doc.id, type = "draft" }),
@@ -87,7 +87,7 @@ return function(cwin)
     if node.type == "document" then
       local name = vim.fn.input("Rename: ", node.text)
       if not (name == "") then
-        node.text = document.rename(node.id, name)
+        node.text = documents.rename(node.id, name)
       end
     elseif node.type == "collection" then
       local name = vim.fn.input("Rename: ", node.text)
@@ -117,7 +117,7 @@ return function(cwin)
     if node.type == "document" or node.type == "draft" then
       local sure = vim.fn.input("Delete document "..node.text.."? ", "")
       if sure == "y" then
-        if document.delete(node.id) then
+        if documents.delete(node.id) then
           tree:remove_node(node:get_id())
           tree:render()
         end
@@ -129,12 +129,12 @@ return function(cwin)
   split:map("n", "p", function()
     local node = tree:get_node()
     if node.type == "document" then
-      if document.unpublish(node.id) then
+      if documents.unpublish(node.id) then
         node.type = "draft"
         tree:render()
       end
     elseif node.type == "draft" then
-      if document.publish(node.id) then
+      if documents.publish(node.id) then
         node.type = "document"
         tree:render()
       end

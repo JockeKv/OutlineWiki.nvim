@@ -7,7 +7,7 @@ local action_state = require("telescope.actions.state")
 local make_entry = require("telescope.make_entry")
 local entry_display = require("telescope.pickers.entry_display")
 
-local document = require("outlinewiki.document")
+local documents = require("outlinewiki.documents")
 
 M = {}
 
@@ -101,7 +101,7 @@ M.open = function (opts)
         actions.select_default:replace(function()
           actions.close(prompt_bufnr)
           local selection = action_state.get_selected_entry()
-          local buf = document.open(selection.value, opts.win, selection.entry.buf)
+          local buf = documents.open(selection.value, opts.win, selection.entry.buf)
           tree:get_node("-"..selection.value).buf = buf
         end)
         map("n", "<cr>", (function()
@@ -114,12 +114,12 @@ M.open = function (opts)
           local selection = action_state.get_selected_entry()
           if selection.entry.type == "DOC" then
             -- print(selection.value)
-            if document.publish(selection.value) then
+            if documents.publish(selection.value) then
               tree:get_node("-"..selection.value).type = "draft"
             end
           elseif selection.entry.type == "DFT" then
             -- print(selection.value)
-            if document.unpublish(selection.value) then
+            if documents.unpublish(selection.value) then
               tree:get_node("-"..selection.value).type = "document"
             end
           end

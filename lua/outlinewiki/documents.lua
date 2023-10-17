@@ -34,6 +34,9 @@ M.open = function (id, win, buf)
   if s > 200 then print(doc); return end
 
   doc.url = doc.url:gsub('doc', 'outline/doc')
+  -- buf = vim.fn.bufadd(doc.url)
+  -- vim.fn.bufload(buf)
+
   buf = util.open_buffer(win,doc.url, doc.text, {filetype = "markdown", buftype = "acwrite", modified = false})
   vim.api.nvim_buf_set_var(buf, "outline_id", doc.id)
 
