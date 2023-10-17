@@ -48,7 +48,8 @@ end
 ---List all Documents the user has access to
 ---@return Status, List<Document>|Error
 api.get_documents = function ()
-  return post("documents.list", "{}")
+  local body = vim.fn.json_encode({ limit = 100 })
+  return post("documents.list", body)
 end
 
 ---Get Document Info and Text
