@@ -1,6 +1,48 @@
 local api = require"outlinewiki.api"
 local util = require"outlinewiki.util"
 
+local Documents = {
+  _list = {},
+}
+
+---Returns a list of Documents
+--- Can be cached.
+--- If *reload* is true, force the reload from the API
+---@param reload? boolean
+---@return Document[]
+function Documents: list (reload)
+  if self._list == {} or reload then
+    -- Get the list
+    -- Create the Document objects
+    -- Put the Documents in _list
+  else
+    return self._list
+  end
+  return {}
+end
+
+---Create a new Document
+--- Returns the Document on success or **nil** on failure
+---@param name string
+---@param col Collection
+---@param opts? table
+---@return Document|nil
+function Documents: create (name, col, opts)
+
+  return nil
+end
+
+function Documents: complete ()
+    local list = {}
+    for _, doc in ipairs(self:list()) do
+      table.insert(list, {
+        title = doc:title(),
+        url = doc:url(),
+      })
+    end
+  return list
+end
+
 local M = {
   comp_list = nil,
   home_page = [[

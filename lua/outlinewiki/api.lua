@@ -48,18 +48,6 @@ local function post(endpoint, body)
   end
 end
 
-
--- New Document type
-
----Update the Document object
----@param opts table
----@return table|nil Result
----@return string|nil Error
-api.document_update = function (opts)
-  local body = vim.fn.json_encode(opts)
-  return go_post("documents.update", body)
-end
-
 -- COLLECTIONS
 
 ---Get all Collections accessible by the User
