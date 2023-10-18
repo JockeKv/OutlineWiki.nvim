@@ -1,6 +1,4 @@
----@alias Document table A Document object
 ---@alias DocumentID string The ID of a Document
----@alias Collection table A Collection object
 ---@alias CollectionID string The ID of a Collection
 ---@alias Error string An error message
 ---@alias Status integer The HTTP statuscode of a request
@@ -9,6 +7,28 @@ local curl = require "plenary.curl"
 local config = require"outlinewiki.config"
 
 local api = {}
+
+---Golang-like POST function.
+---@param endpoint string
+---@param body table
+---@return nil|table Result
+---@return nil|string Error
+api.Post = function (endpoint, body)
+  local baseurl = config.base_url.."/api/"
+  local res = curl.post(baseurl..endpoint, {
+    body = body,
+    headers = {
+      content_type  = "application/json",
+      authorization = "Bearer "..config.token
+    }
+  })
+  local ret = vim.fn.json_decode(res.body)
+  if ret.status == 200 then
+    return ret.data, nil
+  else
+    return nil, ret.error..": "..ret.message
+  end
+end
 
 local function post(endpoint, body)
   local baseurl = config.base_url.."/api/"
@@ -26,6 +46,18 @@ local function post(endpoint, body)
     print(ret.status, ret.error..": "..ret.message)
     return ret.status, ret.error..": "..ret.message
   end
+end
+
+
+-- New Document type
+
+---Update the Document object
+---@param opts table
+---@return table|nil Result
+---@return string|nil Error
+api.document_update = function (opts)
+  local body = vim.fn.json_encode(opts)
+  return go_post("documents.update", body)
 end
 
 -- COLLECTIONS
