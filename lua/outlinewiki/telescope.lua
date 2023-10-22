@@ -7,46 +7,9 @@ local action_state = require("telescope.actions.state")
 local make_entry = require("telescope.make_entry")
 local entry_display = require("telescope.pickers.entry_display")
 
-local documents = require("outlinewiki.documents")
+local Documents = require("outlinewiki.documents")
 
 M = {}
-
----
---- Node parsing
-
-local function get_parent(node)
-  return require("outlinewiki.ui.tree").nodes.by_id[node._parent_id]
-end
-
-local function get_node(id)
-  return require("outlinewiki.ui.tree").nodes.by_id[id]
-end
-
-local function get_children(node)
-  if not node:has_children() then return {} end
-  local children = {}
-  for _, id in ipairs(node:get_child_ids()) do
-    table.insert(children, get_node(id))
-  end
-end
-
-local function get_documents(draft)
-  local tree = require("outlinewiki.ui.tree")
-  local docs = {}
-  for k, node in pairs(tree.nodes.by_id) do
-    if (node.type == "document") or (draft and node.type == "draft") then
-      table.insert(docs,  {
-        title = node.text,
-        collection = get_parent(node).text,
-        tasks = node.tasks,
-        id = node.id,
-        buf = node.buf,
-        type = (node.type == "document" and "DOC") or (node.type == "draft" and "DFT")
-      })
-    end
-  end
-  return docs
-end
 
 ---
 --- Entries
@@ -62,18 +25,19 @@ local document_display = entry_display.create {
 }
 
 local function document_entry (entry)
+  -- TODO: Attach functions to the Entry so it can be updated
   return {
-    value = entry.id,
-    ordinal = entry.title,
-    entry = entry,
+    value = entry:id(),
+    ordinal = entry:title(),
+    obj = entry,
     display = function (e)
-      local ent = e.entry
-      local tasks = (ent.tasks and ent.tasks.total > 1 and ent.tasks.completed.."/"..e.entry.tasks.total) or "None"
+      local obj = e.obj
       return document_display {
-        { ent.type, "TelescopeResultsNumber" },
-        { tasks, "TelescopeResultsComment" },
-        { ent.collection, "Boolean" },
-        ent.title,
+        { obj:type(), "TelescopeResultsNumber" },
+        { obj:tasks(), "TelescopeResultsComment" },
+        { obj:collection():title(), "Boolean" },
+        -- { "Col", "Boolean" },
+        obj:title(),
       }
       end,
   }
@@ -85,7 +49,6 @@ end
 --- vim.api.nvim_put
 
 M.open = function (opts)
-  local tree = require("outlinewiki.ui.tree")
   opts = opts or {}
   opts.find_command = opts.find_command or { "ls" }
   -- make file icon (make_entry.gen_from_file(opts))
@@ -94,15 +57,14 @@ M.open = function (opts)
   pickers
     .new(opts, {
       prompt_title = "Open Document",
-      finder = finders.new_table{ results = get_documents(true), entry_maker = document_entry },
+      finder = finders.new_table{ results = Documents:list(), entry_maker = document_entry },
       -- previewer = conf.file_previewer(opts),
       sorter = conf.file_sorter(opts),
       attach_mappings = function(prompt_bufnr, map)
         actions.select_default:replace(function()
           actions.close(prompt_bufnr)
           local selection = action_state.get_selected_entry()
-          local buf = documents.open(selection.value, opts.win, selection.entry.buf)
-          tree:get_node("-"..selection.value).buf = buf
+          selection.obj:open(opts.win)
         end)
         map("n", "<cr>", (function()
           local selection = action_state.get_selected_entry()
@@ -110,18 +72,22 @@ M.open = function (opts)
           print(vim.inspect(selection))
           return selection
         end))
+        -- TODO: This works but the changes are not reflected in the picker.
+        --       The code needs some cleanup as well
         map("n", "p", (function()
           local selection = action_state.get_selected_entry()
-          if selection.entry.type == "DOC" then
+          if selection.obj:type() == "DOC" then
             -- print(selection.value)
-            if documents.publish(selection.value) then
-              tree:get_node("-"..selection.value).type = "draft"
-            end
-          elseif selection.entry.type == "DFT" then
+            selection.obj:unpublish()
+            -- if Documents.publish(selection.value) then
+            --   tree:get_node("-"..selection.value).type = "draft"
+            -- end
+          elseif selection.obj:type() == "DFT" then
             -- print(selection.value)
-            if documents.unpublish(selection.value) then
-              tree:get_node("-"..selection.value).type = "document"
-            end
+            selection.obj:publish()
+            -- if Documents.unpublish(selection.value) then
+            --   tree:get_node("-"..selection.value).type = "document"
+            -- end
           end
           return selection
         end))

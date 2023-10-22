@@ -1,9 +1,6 @@
-local NuiTree = require("nui.tree")
 local Split = require("nui.split")
 
 local popup = require"outlinewiki.ui.popup"
-local documents = require"outlinewiki.documents"
-local api = require"outlinewiki.api"
 
 return function(cwin)
   local tree = require("outlinewiki.ui.tree")
@@ -15,7 +12,6 @@ return function(cwin)
     buf_options = {
       ft = "OutlineMenu"
     },
-    
   })
   split:mount()
   tree.bufnr = split.bufnr
@@ -23,6 +19,7 @@ return function(cwin)
 
   local map_options = { noremap = true, nowait = true }
 
+  -- Set current buffer as active buffer.
   split:on("BufEnter", function ()
     tree.bufnr = split.bufnr
     tree:render()
@@ -35,11 +32,11 @@ return function(cwin)
 
   -- Reload
   split:map("n", "R", function()
-    tree:refresh()
+    tree:refresh(true)
   end, map_options)
 
   -- Interact
-  split:map("n", "<CR>", function()
+  split:map("n", "l", function()
     local node = tree:get_node()
     if node:has_children() then
       if node:is_expanded() then
@@ -48,65 +45,58 @@ return function(cwin)
         node:expand()
       end
       tree:render()
-    else
-      if node.id then
-        node.buf = documents.open(node.id, cwin, node.buf)
-        vim.api.nvim_set_current_win(cwin)
+    end
+  end, map_options)
+
+  split:map("n", "<CR>", function()
+    local node = tree:get_node()
+    if node:open(cwin) then
+      vim.api.nvim_set_current_win(cwin)
+    elseif node:has_children() then
+      if node:is_expanded() then
+        node:collapse()
+      else
+        node:expand()
       end
+      tree:render()
     end
   end, map_options)
 
   -- Create Document
   split:map("n", "a", function()
     local node = tree:get_node()
-    if node.type == "document" then
-    elseif node.type == "collection" then
-      local name = vim.fn.input("Name: ", "")
-      if not (name == "") then
-        local doc = documents.create(name, node.id)
-        if doc then
-          documents.open(doc.id, cwin)
+    local name = vim.fn.input("Name: ", "")
+    if not (name == "") then
+      local doc = node:create(name)
+      if doc then
+        tree:add_node(doc:as_TreeNode(), node:get_id())
+        tree:render()
+        if node:open(cwin) then
           vim.api.nvim_set_current_win(cwin)
-          tree:add_node(
-            NuiTree.Node({ text = doc.title:gsub("\n",""), id = doc.id, type = "draft" }),
-            node:get_id()
-          )
-          tree:render()
-        else
-          print("Create failed.")
         end
+      else
+        print("Could not create Document")
       end
     end
-
-    tree:render()
   end, map_options)
 
   -- Rename
   split:map("n", "r", function()
     local node = tree:get_node()
-    if node.type == "document" then
-      local name = vim.fn.input("Rename: ", node.text)
-      if not (name == "") then
-        node.text = documents.rename(node.id, name)
-      end
-    elseif node.type == "collection" then
-      local name = vim.fn.input("Rename: ", node.text)
-      if not (name == "") then
-        local s, col = api.save_collection({ id = node.id, name = name })
-        if s < 299 then
-          node.text = col.name
-        end
+    local name = vim.fn.input("Rename: ", node:title())
+    if not (name == "") then
+      if node:rename(name) then
+        tree:render()
       end
     end
-    tree:render()
   end, map_options)
 
   -- Info
   split:map("n", "i", function()
     local node = tree:get_node()
-    if node.type == "document" or node.type == "draft" then
+    if node:type() == "DOC" or node:type() == "DFT" then
       popup.info(node.id)
-    elseif node.type == "collection" then
+    elseif node:type() == "COL" then
       print(node:get_id())
     end
   end, map_options)
@@ -114,10 +104,10 @@ return function(cwin)
   -- Delete
   split:map("n", "d", function ()
     local node = tree:get_node()
-    if node.type == "document" or node.type == "draft" then
-      local sure = vim.fn.input("Delete document "..node.text.."? ", "")
+    if (node:type() == "DOC") or (node:type() == "DFT") then
+      local sure = vim.fn.input("Delete document "..node:title().."? ", "")
       if sure == "y" then
-        if documents.delete(node.id) then
+        if node:delete() then
           tree:remove_node(node:get_id())
           tree:render()
         end
@@ -128,17 +118,10 @@ return function(cwin)
   -- Publish
   split:map("n", "p", function()
     local node = tree:get_node()
-    if node.type == "document" then
-      if documents.unpublish(node.id) then
-        node.type = "draft"
-        tree:render()
-      end
-    elseif node.type == "draft" then
-      if documents.publish(node.id) then
-        node.type = "document"
-        tree:render()
-      end
+    if not node:publish() then
+      node:unpublish()
     end
+    tree:render()
   end, map_options)
 
   -- expand all nodes

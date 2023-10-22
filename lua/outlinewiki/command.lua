@@ -1,6 +1,5 @@
 local ui = require("outlinewiki.ui")
 local telescope = require("outlinewiki.telescope")
-local documents = require("outlinewiki.documents")
 
 local M = {
   commands = {

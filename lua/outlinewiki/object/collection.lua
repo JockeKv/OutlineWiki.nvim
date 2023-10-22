@@ -1,45 +1,51 @@
+local NuiTree = require("nui.tree")
 local api = require("outlinewiki.api")
 
----@alias API_Collection table Collection object returned from the API
-
-local meta_props = {
-  "id",
-  "collectionId",
-  "parentCollectionId",
-  "title",
-  "urlId",
-  "revision",
-  "createdAt",
-  -- "createdBy",
-  "updatedAt",
-  -- "updatedBy",
-  "publishedAt",
-  "archivedAt",
-  "deletedAt",
-}
+local Documents = require("outlinewiki.documents")
 
 ---
 -- The Class
 
+---The Metadata for the Collection Class.
+---@class CollectionMeta
+---@field id string
+---@field name string
+---@field description string
+---@field index string
+---@field color string
+---@field icon string
+---@field permission string
+---@field createdAt string
+---@field updatedAt string
+---@field deletedAt string
+
 ---@class Collection
----@field meta table Table of metadata of the Collection
+---@field meta CollectionMeta
 ---@field bufnr nil|integer The bufnr of the buffer the Collection is loaded into. Otherwise **nil**
 local Collection = {
   -- Object props
-  __class = "COL",
-  __index = nil,
+  __class = "DOC",
 
   -- Meta
-  meta = {},
+  meta = {
+    id = "",
+    name = "",
+    description = "",
+    index = "",
+    color = "",
+    icon = "",
+    permission = "",
+    createdAt = "",
+    updatedAt = "",
+    deletedAt = "",
+  },
 
   -- Editor
   bufnr = nil,
 }
 
-
 ---
 -- Property accessors
-
 
 ---Get the Collection id
 ---@return string
@@ -50,50 +56,94 @@ end
 ---Get the Collection title
 ---@return string
 function Collection: title ()
-  return self.meta.title:gsub("\n", "")
+  local title = self.meta.name:gsub("\n", "")
+  return title
 end
 
----The relative URL of the Collection
----@return string
-function Collection: url ()
-  return "/collection/"..string.lower(self:title()):gsub(" ", "-").."-"..self.meta.urlId
-end
-
----The filename of the Collection buffer in neovim
----Just the url but with '/outline/' added in front
----@return string
-function Collection: filename ()
-  return "/outline"..self:url()
-end
-
-
----Returns 'COL' as there is only one type of Collection
+---Returns 'COL'
 ---@return string
 function Collection: type ()
   return "COL"
 end
 
+---Returns the children Document(s) if any or **nil** if none
+---@return Document[]
+function Collection: documents ()
+  return Documents:list_by_collection(self)
+end
+
+---
+-- General functions
+
+---Create a sub-Document
+---@param title string
+---@return nil|Document
+function Collection: create(title)
+  local Document = require("outlinewiki.object.document")
+  local obj = api.Documents("create", {
+    title = title,
+    collectionId = self.meta.id,
+  })
+  if obj == nil then return nil end
+  local doc = Document(obj)
+  Documents:_add(doc)
+  return doc
+end
+
+---Rename the Collection
+---@param name string New name
+function Collection:rename (name)
+  return self:__update("update", { name = name })
+end
+
+---
+-- Generating the TreeNode
+
+function Collection: as_TreeNode ()
+  local doc_nodes = {}
+  for _, doc in ipairs(self:documents()) do
+    if not doc:is_child() then
+      table.insert(doc_nodes, doc:as_TreeNode())
+    end
+  end
+  return NuiTree.Node(
+    {
+      id    = self:id(),
+      obj   = self,
+      rename    = function (s, name) return s.obj:rename(name) end,
+      create    = function (s, name) return s.obj:create(name) end,
+      open      = function (_, _) return false end,
+      type      = function (s) return s.obj:type() end,
+      title     = function (s) return s.obj:title() end,
+      tasks     = function (_) return "None" end,
+      publish   = function (_) return false end,
+      unpublish = function (_) return false end,
+      delete    = function (_) return false end,
+    },
+    doc_nodes)
+end
+
 ---
 -- API
 
-
 ---Send a request to the API
+---Reset the Collection metadata with the data of the response
 ---@param endpoint string The endpoint to which the request is sent. Typically 'update'
 ---@param opts table The parameters to send to the API. Is converted to JSON.
 ---@return boolean Returns **true** on success, otherwise **false**
-function Collection:__post (endpoint, opts)
+function Collection:__update (endpoint, opts)
   opts.id = self:id()
 
-  local obj, err = api.Post("collections."..endpoint, opts)
+  local obj, err = api.Collections(endpoint, opts)
   if not (err == nil) then
-    print("Could not update collection: "..err)
+    print("Could not update the Collection: "..err)
     return false
   elseif obj == nil then
     print("Collection returned as nil")
     return false
   end
 
-  for _, prop in ipairs(meta_props) do
+  for prop, _ in pairs(self.meta) do
     self.meta[prop] = obj[prop]
   end
 
@@ -110,8 +160,9 @@ function Collection:new (obj)
   local o = {}
   setmetatable(o, self)
   self.__index = self
-  for _, prop in ipairs(meta_props) do
-    self.meta[prop] = obj[prop]
+  o.meta = {}
+  for prop, _ in pairs(self.meta) do
+    o.meta[prop] = obj[prop]
   end
   return o
 end
@@ -119,5 +170,4 @@ end
 return function (obj)
   return Collection:new(obj)
 end
-
 

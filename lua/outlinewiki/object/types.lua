@@ -1,0 +1,35 @@
+
+---@class API_Document
+---@field id string
+---@field collectionId string
+---@field parentDocumentId string
+---@field title string
+---@field fullWidth boolean
+---@field emoji string
+---@field text string
+---@field urlId string
+---@field collaborators string[]
+---@field pinned boolean
+---@field template boolean
+---@field templateId string
+---@field revision integer
+---@field createdAt string
+---@field createdBy table
+---@field updatedAt string
+---@field updatedBy table
+---@field publishedAt string
+---@field archivedAt string
+---@field deletedAt string
+
+---@class API_Collection
+---@field id string
+---@field name string
+---@field description string
+---@field sort table
+---@field index string
+---@field color string
+---@field icon string
+---@field permission string
+---@field createdAt string
+---@field updatedAt string
+---@field deletedAt string

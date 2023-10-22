@@ -30,11 +30,17 @@ util.set_buffer = function (buf, content, opts)
   end
 end
 
+---Open a buffer and set the name. content and buffer options according to parameters
+---@param win window
+---@param name string
+---@param content string
+---@param opts table
+---@return buffer
 util.open_buffer = function(win, name, content, opts)
   local buf = vim.fn.bufadd(name)
-  
+
   local undolvl = vim.bo.undolevels
-  vim.api.nvim_set_option_value("undolevels",-1,{buf = buf})
+  vim.api.nvim_set_option_value("undolevels",-1,{ buf = buf })
   vim.api.nvim_win_set_buf(win, buf)
   util.set_buffer(buf,content, opts)
   vim.api.nvim_set_option_value("undolevels",undolvl,{buf = buf})
@@ -76,5 +82,11 @@ util.split = function (text, pattern, plain)
   end
   return ret
 end
+
+util.last_split = function (s, pat)
+  local split = util.split(s,pat)
+  return split[#split]
+end
+
 
 return util

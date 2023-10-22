@@ -1,8 +1,8 @@
-local api = require"outlinewiki.api"
 local NuiLine = require("nui.line")
 local NuiTree = require("nui.tree")
-local documents = require("outlinewiki.documents")
-local util = require("outlinewiki.util")
+
+local Documents = require("outlinewiki.documents")
+local Collections = require("outlinewiki.collections")
 
 
 local tree = NuiTree({
@@ -15,66 +15,46 @@ local tree = NuiTree({
 
     if node:has_children() then
       if node:is_expanded() then
-        line:append(" ", "SpecialChar")
-      elseif node.type == "collection" then
-        line:append(" ", "SpecialChar")
-      elseif node.type == "drafts" then
-        line:append("󰣞 ", "SpecialChar")
+        line:append(" ", "Comment")
+      else
+        line:append(" ", "Comment")
       end
     else
-      if node.type == "home" then
-        line:append(" ", "SpecialChar")
-      elseif node.type == "document" then
-        line:append("󰈙 ", "SpecialChar")
-      elseif node.type == "draft" then
-        line:append("󰷈 ", "SpecialChar")
-        line:append("[Draft] ", "Number")
-      else
-        line:append("---", "SpecialChar")
-      end
+      line:append("  ", "SpecialChar")
+    end
+    if node:type() == "home" then
+      line:append(" ", "SpecialChar")
+    elseif node:type() == "COL" then
+      line:append(" ", "SpecialChar")
+    elseif node:type() == "DOC" then
+      line:append("󰈙 ", "SpecialChar")
+    elseif node:type() == "DFT" then
+      line:append("󰷈 ", "SpecialChar")
+      line:append("[Draft] ", "Number")
+    else
+      line:append("---", "SpecialChar")
     end
 
-    line:append(node.text)
+    line:append(node:title())
 
-    if node.type == "document" and node.tasks and node.tasks.total > 0 then
-      line:append(" ["..node.tasks.completed.."/"..node.tasks.total.."]", "Comment")
+    if (node:type() == "DOC") and not (node:tasks() == "None") then
+      line:append(" ["..node:tasks().."]", "Comment")
     end
     return line
   end,
 })
 
-tree.refresh = function (self)
-  local s, collections = api.get_collections()
-  if s > 200 then print(collections); return end
-
-  local documents = documents.list(true)
-  if documents == nil then return end
-
+function tree: refresh (reload)
   local nodes = {}
-  table.insert(nodes, NuiTree.Node({ text = "Home", id = "home", type = "home" }))
-
-  table.insert(nodes, NuiTree.Node({ text = ""}))
-
-  for _, col in ipairs(collections) do
-    local subnodes = {}
-    for _, doc in ipairs(util.docs_for_col(col, documents)) do
-      if doc.publishedAt == vim.NIL then
-        table.insert(subnodes, NuiTree.Node({ text = doc.title:gsub('\n',''), id = doc.id, type = "draft", tasks = doc.tasks }))
-      else
-        table.insert(subnodes, NuiTree.Node({ text = doc.title:gsub('\n',''), id = doc.id, type = "document", tasks = doc.tasks }))
-      end
-    end
-    table.insert(nodes, NuiTree.Node({ text = col.name:gsub('\n',''), id = col.id, type = "collection" }, subnodes))
+  if reload then
+    Documents:list(true)
+  end
+  for _, col in ipairs(Collections:list(reload)) do
+    table.insert(nodes, col:as_TreeNode())
   end
   self:set_nodes(nodes)
   self:render()
 end
-
--- local function reload ()
---   local nodes = get_nodes()
---   tree:set_nodes(nodes)
---   tree:render()
--- end
 
 tree:refresh()
 return tree
