@@ -45,6 +45,7 @@ M.gotoDoc = function ()
   local doc = getCursorDoc()
   if doc then
       doc:open( vim.api.nvim_get_current_win())
+      vim.api.nvim_set_current_win(vim.api.nvim_get_current_win())
   else
     return nil
   end
