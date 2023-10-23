@@ -36,7 +36,7 @@ return function(cwin)
   end, map_options)
 
   -- Interact
-  split:map("n", "l", function()
+  split:map("n", "<Tab>", function()
     local node = tree:get_node()
     if node:has_children() then
       if node:is_expanded() then
