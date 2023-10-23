@@ -28,7 +28,7 @@ local function document_entry (entry)
   -- TODO: Attach functions to the Entry so it can be updated
   return {
     value = entry:id(),
-    ordinal = entry:title(),
+    ordinal = entry:collection():title().."/"..entry:title(),
     obj = entry,
     display = function (e)
       local obj = e.obj
