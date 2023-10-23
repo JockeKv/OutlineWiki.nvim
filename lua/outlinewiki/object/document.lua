@@ -260,23 +260,23 @@ end
 ---@param win window
 ---@return buffer
 function Document: open(win)
-  print("Open document")
   if self.bufnr and vim.fn.bufexists(self.bufnr) then
-    print("Buffer exists")
-    -- Check if buffer is valid
-    vim.api.nvim_win_set_buf(win, self.bufnr)
-    return self.bufnr
+    local ok, _ = pcall(vim.api.nvim_get_option_value,"outline_id", {buf = self.bufnr})
+    if ok then
+      -- Check if buffer is valid
+      vim.api.nvim_win_set_buf(win, self.bufnr)
+      return self.bufnr
+    end
   end
 
   -- Create a new buffer
   local buf = vim.fn.bufadd(self:filename())
   self.bufnr = buf
-  print("Creating buffer: "..buf)
 
   buf = util.open_buffer(win,self:filename(), self:content(), {
     filetype = "outlinewiki",
     buftype = "acwrite",
-    -- listed = true
+    buflisted = true,
   })
   vim.api.nvim_buf_set_var(buf, "outline_id", self:id())
 
