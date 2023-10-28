@@ -12,10 +12,10 @@ lsp_util.getCursorDoc = function()
   end
 
   local node = ts_utils.get_node_at_cursor()
-  print(vim.inspect(ts_utils.get_named_children(node)))
-  for _, child in ipairs(ts_utils.get_named_children(node)) do
-    print(ts_utils.get_node_text(node))
-  end
+  -- print(vim.inspect(ts_utils.get_named_children(node)))
+  -- for _, child in ipairs(ts_utils.get_named_children(node)) do
+  --   print(ts_utils.get_node_text(node))
+  -- end
   local link_node = nil
   if node:type() == "inline_link" then
     link_node = node
