@@ -80,7 +80,7 @@ end
 ---Just the url but with '/outline/' added in front
 ---@return string
 function Document: filename ()
-  return "/outline"..self:url()
+  return "outlinewiki://"..self:url()
 end
 
 ---@return string
