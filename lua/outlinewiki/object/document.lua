@@ -73,7 +73,9 @@ end
 ---The relative URL of the Document
 ---@return string
 function Document: url ()
-  return "/doc/"..string.lower(self:title()):gsub(" ", "-").."-"..self.meta.urlId
+  local url = string.lower(self:title()):gsub(" ", "-")
+  local url_encoded = util.urlencode(url)
+  return "/doc/"..url_encoded.."-"..self.meta.urlId
 end
 
 ---The filename of the Document buffer in neovim

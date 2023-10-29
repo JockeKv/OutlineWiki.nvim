@@ -9,6 +9,22 @@ local util = {}
 -- end
 --
 
+local char_to_hex = function(c)
+  return string.format("%%%02X", string.byte(c))
+end
+
+---Convert to urlencoded string
+---@param url string
+---@return string|nil
+util.urlencode = function (url)
+  if url == nil then
+    return
+  end
+  url = url:gsub("\n", "\r\n")
+  url = url:gsub("([^%w ])", char_to_hex)
+  url = url:gsub(" ", "+")
+  return url
+end
 
 util.docs_for_col = function (col, docs)
   local r = {}
@@ -37,7 +53,7 @@ end
 ---@param opts table
 ---@return buffer
 util.open_buffer = function(win, name, content, opts)
-  local buf = vim.fn.bufadd(name)
+  local buf = vim.fn.bufadd(name) --[[@as integer]] -- To remove warnings
 
   local undolvl = vim.bo.undolevels
   vim.api.nvim_set_option_value("undolevels",-1,{ buf = buf })
