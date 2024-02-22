@@ -31,7 +31,7 @@ api.Post = function (endpoint, opts)
   end
 end
 
----Golang POST function for Documents endpoint
+---POST function for Documents endpoint
 ---@param endpoint string
 ---@param opts table
 ---@return nil|API_Document|API_Document[]
@@ -40,7 +40,7 @@ api.Documents = function (endpoint, opts)
 end
 
 
----Golang POST function for Collections endpoint
+---POST function for Collections endpoint
 ---@param endpoint string
 ---@param opts table
 ---@return nil|API_Collection|API_Collection[]
@@ -89,77 +89,12 @@ local function post(endpoint, body)
   end
 end
 
--- COLLECTIONS
-
----Get all Collections accessible by the User
----@return Status, List<Collection>|Error
-api.get_collections = function ()
-  return post("collections.list", "{}")
-end
-
----Save and updated Document.
----@param col Collection
----@return Status, Collection|Error
-api.save_collection = function (col)
-  local body = vim.fn.json_encode(col)
-  return post("collections.update", body)
-end
--- DOCUMENT
-
----List all Documents the user has access to
----@return Status, List<Document>|Error
-api.get_documents = function ()
-  local body = vim.fn.json_encode({ limit = 100 })
-  return post("documents.list", body)
-end
-
 ---Get Document Info and Text
 ---@param id DocumentID
 ---@return integer, Document|Error
 api.get_document = function (id)
   local body = vim.fn.json_encode({ id = id })
   return post("documents.info", body)
-end
-
----Create a new Document
----@param name string The name of the Document
----@param collectionid CollectionID
----@return Status,Document|Error
-api.create_document = function (name, collectionid)
-  local doc = { title = name, collectionId = collectionid }
-  local body = vim.fn.json_encode(doc)
-  return post("documents.create", body)
-end
-
----Save and updated Document.
----@param doc Document
----@return Status, Document|Error
-api.save_document = function (doc)
-  local body = vim.fn.json_encode(doc)
-  return post("documents.update", body)
-end
-
----Unpublis a Document, making it a draft.
----@param id DocumentID
----@return Status, Document|Error
-api.unpublish_document = function (id)
-  local body = vim.fn.json_encode({ id = id })
-  return post("documents.unpublish", body)
-end
-
----Delete a Document. Optional permanent
----@param id DocumentID
----@param permanent? boolean If set to true, the document will not be recoverable
----@return Status, string|Error
-api.delete_document = function (id, permanent)
-  local body = vim.fn.json_encode({ id = id, permanent = permanent or false })
-  return post("documents.delete", body)
-end
-
--- DRAFTS
-
-api.get_drafts = function ()
-  return post("documents.drafts", "{}")
 end
 
 return api
