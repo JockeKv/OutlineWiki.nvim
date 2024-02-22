@@ -1,14 +1,10 @@
 local ui = require("outlinewiki.ui")
-local telescope = require("outlinewiki.telescope")
 
 local M = {
   commands = {
-    cmd = function ()
-      require("noice").redirect(vim.fn.getcmdline())
-    end,
     menu = ui.open,
     menu_tab = ui.tab_open,
-    open = telescope.open,
+    telescope = require("outlinewiki.telescope").open,
 
   },
   open = function ()
