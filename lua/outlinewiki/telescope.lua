@@ -74,23 +74,15 @@ M.open = function (opts)
         end))
         -- TODO: This works but the changes are not reflected in the picker.
         --       The code needs some cleanup as well
-        map("n", "p", (function()
-          local selection = action_state.get_selected_entry()
-          if selection.obj:type() == "DOC" then
-            -- print(selection.value)
-            selection.obj:unpublish()
-            -- if Documents.publish(selection.value) then
-            --   tree:get_node("-"..selection.value).type = "draft"
-            -- end
-          elseif selection.obj:type() == "DFT" then
-            -- print(selection.value)
-            selection.obj:publish()
-            -- if Documents.unpublish(selection.value) then
-            --   tree:get_node("-"..selection.value).type = "document"
-            -- end
-          end
-          return selection
-        end))
+        -- map("n", "p", (function()
+        --   local selection = action_state.get_selected_entry()
+        --   if selection.obj:type() == "DOC" then
+        --     selection.obj:unpublish()
+        --   elseif selection.obj:type() == "DFT" then
+        --     selection.obj:publish()
+        --   end
+        --   return selection
+        -- end))
         return true
       end,
     })
