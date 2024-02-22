@@ -1,6 +1,12 @@
 local M = {
   base_url = "base_url",
   token = "token",
+  lsp = true,
+  integrations = {
+    telescope = true,
+    luasnip = true,
+    treesitter = true,
+  }
 }
 
 M.setup = function (opts)
@@ -8,7 +14,11 @@ M.setup = function (opts)
   for key, value in pairs(config) do
     M[key] = value
   end
-  require('telescope').load_extension 'outlinewiki'
+
+  if M.integrations.telescope then
+    require('telescope').load_extension 'outlinewiki'
+  end
+
   return M
 end
 
