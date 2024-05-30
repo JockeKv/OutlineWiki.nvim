@@ -22,7 +22,7 @@ if Config.integrations.luasnip then
   local snips = {}
   local comp = Documents:complete()
   for _, doc in ipairs(comp) do
-    table.insert(snips, ls.snippet("["..doc.title.."]", { ls.text_node("["..doc.title.."]("..doc.url..")") }))
+    table.insert(snips, ls.snippet("#"..doc.title, { ls.text_node("["..doc.title.."]("..doc.url..")") }))
   end
   ls.add_snippets("outlinewiki", snips)
 
