@@ -4,7 +4,6 @@ local M = {
   commands = {
     menu = ui.open,
     menu_tab = ui.tab_open,
-    telescope = require("outlinewiki.telescope").open,
 
   },
   open = function ()

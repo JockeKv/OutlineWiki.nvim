@@ -17,6 +17,7 @@ M.setup = function (opts)
 
   if M.integrations.telescope then
     require('telescope').load_extension 'outlinewiki'
+    require('outlinewiki.command').commands.telescope = require("outlinewiki.telescope").open
   end
 
   return M
