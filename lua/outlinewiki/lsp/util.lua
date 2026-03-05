@@ -1,5 +1,3 @@
-local ts_utils = require("nvim-treesitter.ts_utils")
-
 local Documents = require("outlinewiki.documents")
 
 local lsp_util = {}
@@ -11,7 +9,7 @@ lsp_util.getCursorDoc = function()
     return
   end
 
-  local node = ts_utils.get_node_at_cursor()
+  local node = vim.treesitter.get_node()
   -- print(vim.inspect(ts_utils.get_named_children(node)))
   -- for _, child in ipairs(ts_utils.get_named_children(node)) do
   --   print(ts_utils.get_node_text(node))
