@@ -59,20 +59,20 @@ local Document = {
 
 ---Get the Document id
 ---@return string
-function Document: id ()
+function Document:id ()
   return self.meta.id
 end
 
 ---Get the Document title
 ---@return string
-function Document: title ()
+function Document:title ()
   local title = self.meta.title:gsub("\n", "")
   return title
 end
 
 ---The relative URL of the Document
 ---@return string
-function Document: url ()
+function Document:url ()
   local url = string.lower(self:title()):gsub(" ", "-")
   local url_encoded = util.urlencode(url)
   return "/doc/"..url_encoded.."-"..self.meta.urlId
@@ -81,12 +81,12 @@ end
 ---The filename of the Document buffer in neovim
 ---Just the url but with '/outline/' added in front
 ---@return string
-function Document: filename ()
+function Document:filename ()
   return "outlinewiki://"..self:url()
 end
 
 ---@return string
-function Document: tasks ()
+function Document:tasks ()
   local tasks = self.meta.tasks
   if tasks == nil or tasks.total == 0 then return "None" end
   return tasks.completed.."/"..tasks.total
@@ -96,20 +96,20 @@ end
 ---  'DOC' for a published Document
 ---  'DFT' for a non-published Document, or Draft
 ---@return string
-function Document: type ()
+function Document:type ()
   return (self:published() and "DOC") or "DFT"
 end
 
 ---Returns the Collection the Document belongs to
 ---@return Collection|nil
-function Document: collection ()
+function Document:collection ()
   local col = Collections:get_by_id(self.meta.collectionId)
   return col
 end
 
 ---Returns the Parent Document or nil if none.
 ---@return Document|nil
-function Document: parent ()
+function Document:parent ()
   if self:is_child() then
     return Documents:get_by_id(self.meta.parentDocumentId)
   end
@@ -118,11 +118,11 @@ end
 
 ---Returns the children Document(s) if any or **nil** if none
 ---@return Document[]
-function Document: children ()
+function Document:children ()
   return Documents:list_by_parentid(self.meta.id)
 end
 
-function Document: is_child ()
+function Document:is_child ()
   return not (self.meta.parentDocumentId == vim.NIL)
 end
 
@@ -132,7 +132,7 @@ end
 ---Create a sub-Document
 ---@param title string
 ---@return nil|Document
-function Document: create(title)
+function Document:create(title)
   local obj = api.Documents("create", {
     title = title,
     collectionId = self.meta.collectionId,
@@ -146,7 +146,7 @@ end
 
 ---Get the content of the Document
 ---@return nil|string
-function Document: content()
+function Document:content()
   return self:__text()
 end
 
@@ -191,7 +191,7 @@ end
 ---
 -- Generate other types
 ---Generate the LSP Hover doc
-function Document: LSP_hover ()
+function Document:LSP_hover ()
   local text = self:title()
   text = text.."\n---\n"
   text = text..((self:collection() and "\nCollection: "..self:collection():title()) or "")
@@ -211,7 +211,7 @@ end
 
 ---Generate the Entity table for Telescope
 ---@return table
-function Document: as_TelescopeNode()
+function Document:as_TelescopeNode()
   return {
     title = self:title(),
     collection = self:collection():title(),
@@ -221,9 +221,13 @@ function Document: as_TelescopeNode()
   }
 end
 
+---@class DocNode
+---@field id string
+---@field obj Document
+
 ---Return the Document as a node for NuiTree
 ---@return table
-function Document: as_TreeNode ()
+function Document:as_TreeNode ()
   local child_nodes = {}
   for _, child in ipairs(self:children()) do
     table.insert(child_nodes, child:as_TreeNode())
@@ -232,174 +236,195 @@ function Document: as_TreeNode ()
     {
       id    = self:id(),
       obj   = self,
+      ---@param s DocNode
+      ---@param name string
       rename    = function (s, name) return s.obj:rename(name) end,
+      ---@param s DocNode
+      ---@param name string
       create    = function (s, name) return s.obj:create(name) end,
+      ---@param s DocNode
+      ---@param win integer
       open      = function (s, win) return s.obj:open(win) end,
+      ---@param s DocNode
       type      = function (s) return s.obj:type() end,
+      ---@param s DocNode
       title     = function (s) return s.obj:title() end,
+      ---@param s DocNode
       tasks     = function (s) return s.obj:tasks() end,
+      ---@param s DocNode
       publish   = function (s) return s.obj:publish() end,
+      ---@param s DocNode
       unpublish = function (s) return s.obj:unpublish() end,
+      ---@param s DocNode
       delete    = function (s) return s.obj:delete() end,
     },
     child_nodes)
-end
-
----Helper function to recursively generate children TreeNodes
-function Document: __child_TreeNodes ()
-  local children = {}
-  for _, child in ipairs(self:children()) do
-    table.insert(children, child:as_TreeNode())
   end
-end
 
----
--- Buffer functions
----
+  ---Helper function to recursively generate children TreeNodes
+  function Document:__child_TreeNodes ()
+    local children = {}
+    for _, child in ipairs(self:children()) do
+      table.insert(children, child:as_TreeNode())
+    end
+  end
 
----Open the Document in a buffer
----Returns the bufnr on success or **nil** on failure
----@param win window
----@return buffer
-function Document: open(win)
-  if self.bufnr and vim.fn.bufexists(self.bufnr) then
-    local ok, _ = pcall(vim.api.nvim_get_option_value,"outline_id", {buf = self.bufnr})
-    if ok then
+  ---
+  -- Buffer functions
+  ---
+
+  ---Open the Document in a buffer
+  ---Returns the bufnr on success or **nil** on failure
+  ---@param win? integer the id of the window to create the buffer in
+  ---@return integer
+  function Document:open(win)
+    if self.bufnr and vim.fn.bufexists(self.bufnr) then
+      -- local ok, _ = pcall(vim.api.nvim_get_option_value,"outline_id", {buf = self.bufnr})
+      -- if ok then
       -- Check if buffer is valid
+      if win and vim.api.nvim_win_is_valid(win) then
+        vim.api.nvim_win_set_buf(win, self.bufnr)
+        return self.bufnr
+      end
+      vim.api.nvim_set_current_buf(self.bufnr)
+      -- vim.api.nvim_win_set_buf(win, self.bufnr)
+      return self.bufnr
+      -- end
+    end
+
+    -- Create a new buffer
+    self.bufnr = util.open_buffer(self:filename(), self:content(), {
+      filetype = "outlinewiki",
+      buftype = "acwrite",
+      buflisted = true,
+    })
+
+
+    vim.api.nvim_buf_set_var(self.bufnr, "outline_id", self:id())
+
+    vim.api.nvim_clear_autocmds({event = "BufWriteCmd", buffer = self.bufnr})
+    vim.api.nvim_create_autocmd({"BufWriteCmd"},{
+      buffer = self.bufnr,
+      desc = "Save OutlineWiki Document",
+      callback = function (opts)
+        self:save()
+      end,
+    })
+    if win and vim.api.nvim_win_is_valid(win) then
       vim.api.nvim_win_set_buf(win, self.bufnr)
       return self.bufnr
     end
+    vim.api.nvim_set_current_buf(self.bufnr)
+    return self.bufnr
   end
 
-  -- Create a new buffer
-  local buf = vim.fn.bufadd(self:filename())
-  self.bufnr = buf
-
-  buf = util.open_buffer(win,self:filename(), self:content(), {
-    filetype = "outlinewiki",
-    buftype = "acwrite",
-    buflisted = true,
-  })
-  vim.api.nvim_buf_set_var(buf, "outline_id", self:id())
-
-  vim.api.nvim_clear_autocmds({event = "BufWriteCmd", buffer = buf})
-  vim.api.nvim_create_autocmd({"BufWriteCmd"},{
-    buffer = buf,
-    desc = "Save OutlineWiki Document",
-    callback = function (opts)
-      self:save()
-    end,
-  })
-  return self.bufnr
-end
-
----Reload the current Document
----@return boolean
-function Document: reload ()
-  if not vim.fn.bufexists(self.bufnr) then
-    return false
-  end
-  local content = self:__text()
-  if content == nil then
-    return false
-  else
-    util.set_buffer(self.bufnr, content, {})
-    return true
-  end
-end
-
----Save the Document
----  Returns **true** if successfull, otherwise **false**
----@return boolean
-function Document: save ()
-  local buf = vim.fn.getbufinfo(self.bufnr)[1]
-  if buf.changed > 0 then
-    -- print("Saving document "..opts.file.." with id "..b.variables.outline_id)
-    local lines = vim.api.nvim_buf_get_lines(buf.bufnr, 0, -1, false)
-    local content = table.concat(lines, "\n")
-
-    if string.len(content) == 0 then print("No content") end
-
-    if self:__update("update",{ text = content }) then
-      vim.api.nvim_set_option_value("modified", false, {buf = buf.bufnr})
-      print("Document saved!")
-      return true
-    else
-      print("Failed to save document")
+  ---Reload the current Document
+  ---@return boolean
+  function Document:reload ()
+    if not vim.fn.bufexists(self.bufnr) then
       return false
     end
+    local content = self:__text()
+    if content == nil then
+      return false
+    else
+      util.set_buffer(self.bufnr, content, {})
+      return true
+    end
   end
-  return false
-end
 
+  ---Save the Document
+  ---  Returns **true** if successfull, otherwise **false**
+  ---@return boolean
+  function Document:save ()
+    local buf = vim.fn.getbufinfo(self.bufnr)[1]
+    if buf.changed > 0 then
+      -- print("Saving document "..opts.file.." with id "..b.variables.outline_id)
+      local lines = vim.api.nvim_buf_get_lines(buf.bufnr, 0, -1, false)
+      local content = table.concat(lines, "\n")
 
----
--- API
+      if string.len(content) == 0 then print("No content") end
 
----Send a request to the API
----Reset the Document metadata with the data of the response
----@param endpoint string The endpoint to which the request is sent. Typically 'update'
----@param opts table The parameters to send to the API. Is converted to JSON.
----@return boolean Returns **true** on success, otherwise **false**
-function Document:__update (endpoint, opts)
-  opts.id = self:id()
-
-  local obj, err = api.Documents(endpoint, opts)
-  if not (err == nil) then
-    print("Could not update the document: "..err)
+      if self:__update("update",{ text = content }) then
+        vim.api.nvim_set_option_value("modified", false, {buf = buf.bufnr})
+        print("Document saved!")
+        return true
+      else
+        print("Failed to save document")
+        return false
+      end
+    end
     return false
-  elseif obj == nil then
-    print("Document returned as nil")
-    return false
   end
 
-  for prop, _ in pairs(self.meta) do
-    self.meta[prop] = obj[prop]
+
+  ---
+  -- API
+
+  ---Send a request to the API
+  ---Reset the Document metadata with the data of the response
+  ---@param endpoint string The endpoint to which the request is sent. Typically 'update'
+  ---@param opts table The parameters to send to the API. Is converted to JSON.
+  ---@return boolean Returns **true** on success, otherwise **false**
+  function Document:__update (endpoint, opts)
+    opts.id = self:id()
+
+    local obj, err = api.Documents(endpoint, opts)
+    if not (err == nil) then
+      print("Could not update the document: "..err)
+      return false
+    elseif obj == nil then
+      print("Document returned as nil")
+      return false
+    end
+
+    for prop, _ in pairs(self.meta) do
+      self.meta[prop] = obj[prop]
+    end
+
+    return true
   end
 
-  return true
-end
+  ---Retreive the document content
+  ---@return nil|string
+  function Document:__text()
+    local opts = { id = self:id() }
 
----Retreive the document content
----@return nil|string
-function Document: __text()
-  local opts = { id = self:id() }
+    local obj, err = api.Documents("info", opts)
+    if not (err == nil) then
+      print("Could not retreive the document: "..err)
+      return nil
+    elseif obj == nil then
+      print("Document returned as nil")
+      return nil
+    end
 
-  local obj, err = api.Documents("info", opts)
-  if not (err == nil) then
-    print("Could not retreive the document: "..err)
-    return nil
-  elseif obj == nil then
-    print("Document returned as nil")
-    return nil
+    for prop, _ in pairs(self.meta) do
+      self.meta[prop] = obj[prop]
+    end
+
+    return obj.text
   end
 
-  for prop, _ in pairs(self.meta) do
-    self.meta[prop] = obj[prop]
+  ---
+  -- Create new instance
+
+  ---Create new Document instance
+  ---@param obj API_Document
+  ---@return Document
+  function Document:new (obj)
+    local o = {}
+    setmetatable(o, self)
+    self.__index = self
+    o.meta = {}
+    for prop, _ in pairs(self.meta) do
+      o.meta[prop] = obj[prop]
+    end
+    return o
   end
 
-  return obj.text
-end
-
----
--- Create new instance
-
----Create new Document instance
----@param obj API_Document
----@return Document
-function Document:new (obj)
-  local o = {}
-  setmetatable(o, self)
-  self.__index = self
-  o.meta = {}
-  for prop, _ in pairs(self.meta) do
-    o.meta[prop] = obj[prop]
+  return function (obj)
+    return Document:new(obj)
   end
-  return o
-end
-
-return function (obj)
-  return Document:new(obj)
-end
 
 

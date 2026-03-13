@@ -29,8 +29,12 @@ end
 
 util.set_buffer = function (buf, content, opts)
   local text_obj = util.split(content,"\n")
+
+  local undolvl = vim.bo.undolevels
+  vim.api.nvim_set_option_value("undolevels",-1,{ buf = buf })
   vim.api.nvim_buf_set_lines(buf,0,-1,false, text_obj)
   vim.api.nvim_set_option_value("modified", false, {buf = buf})
+  vim.api.nvim_set_option_value("undolevels",undolvl,{buf = buf})
 
   for k, v in pairs(opts) do
     vim.api.nvim_set_option_value(k,v, {buf = buf})
@@ -38,19 +42,19 @@ util.set_buffer = function (buf, content, opts)
 end
 
 ---Open a buffer and set the name. content and buffer options according to parameters
----@param win window
 ---@param name string
 ---@param content string
 ---@param opts table
----@return buffer
-util.open_buffer = function(win, name, content, opts)
-  local buf = vim.fn.bufadd(name) --[[@as integer]] -- To remove warnings
+---@return integer
+util.open_buffer = function(name, content, opts)
+  -- local buf = vim.api.nvim_create_buf(true, false)
+  local buf = vim.fn.bufadd(name)
 
-  local undolvl = vim.bo.undolevels
-  vim.api.nvim_set_option_value("undolevels",-1,{ buf = buf })
-  vim.api.nvim_win_set_buf(win, buf)
+  -- vim.api.nvim_set_current_buf(buf)
+
   util.set_buffer(buf,content, opts)
-  vim.api.nvim_set_option_value("undolevels",undolvl,{buf = buf})
+
+  -- vim.api.nvim_exec_autocmds("BufReadPost", { buffer = buf })
 
   return buf
 end

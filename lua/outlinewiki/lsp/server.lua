@@ -51,7 +51,7 @@ server.handleRequest = function (method, params, callback)
   elseif method == 'textDocument/definition' then
     local doc = lsp_util.getCursorDoc()
     if doc then
-      doc:open( vim.api.nvim_get_current_win())
+      doc:open(vim.api.nvim_get_current_win())
     end
     callback(nil,nil,ctx)
   end
