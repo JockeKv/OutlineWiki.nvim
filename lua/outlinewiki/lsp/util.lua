@@ -9,11 +9,28 @@ lsp_util.getCursorDoc = function()
     return
   end
 
+  vim.treesitter.get_parser(0, 'markdown'):parse()
+
   local node = vim.treesitter.get_node()
-  -- print(vim.inspect(ts_utils.get_named_children(node)))
-  -- for _, child in ipairs(ts_utils.get_named_children(node)) do
-  --   print(ts_utils.get_node_text(node))
-  -- end
+  if not node then
+    return
+  end
+
+  if node:type() == "inline" then
+    local parser = vim.treesitter.get_parser(0, 'markdown_inline')
+    if not parser then
+      return
+    end
+    local inline = parser:parse(vim.treesitter.get_range(node, 0))[1]:root()
+
+    for _, child in ipairs(inline:named_children()) do
+      if vim.treesitter.node_contains(node, vim.treesitter.get_range(child, 0)) then
+        node = child
+        break
+      end
+    end
+  end
+
   local link_node = nil
   if node:type() == "inline_link" then
     link_node = node
