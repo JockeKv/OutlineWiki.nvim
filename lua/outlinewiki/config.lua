@@ -6,6 +6,7 @@ local M = {
     telescope = true,
     luasnip = true,
     treesitter = true,
+    snacks = true
   }
 }
 
@@ -18,6 +19,10 @@ M.setup = function (opts)
   if M.integrations.telescope then
     require('telescope').load_extension 'outlinewiki'
     require('outlinewiki.command').commands.telescope = require("outlinewiki.telescope").open
+  end
+
+  if M.integrations.snacks then
+    require('outlinewiki.command').commands.snacks = require("outlinewiki.snacks").picker
   end
 
   return M
