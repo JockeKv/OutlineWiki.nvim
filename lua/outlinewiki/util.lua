@@ -17,7 +17,7 @@ util.urlencode = function (url)
   return url
 end
 
-util.docs_for_col = function (col, docs)
+util.docs_for_col = function(col, docs)
   local r = {}
   for _, d in ipairs(docs) do
     if d.collectionId == col.id then
@@ -27,7 +27,7 @@ util.docs_for_col = function (col, docs)
   return r
 end
 
-util.set_buffer = function (buf, content, opts)
+util.set_buffer = function(buf, content, opts)
   local text_obj = util.split(content,"\n")
 
   local undolvl = vim.bo.undolevels
@@ -60,7 +60,7 @@ util.open_buffer = function(name, content, opts)
 end
 
 
-util.gsplit = function (text, pattern, plain)
+util.gsplit = function(text, pattern, plain)
   local splitStart, length = 1, #text
   return function ()
     if splitStart then
@@ -86,7 +86,7 @@ util.gsplit = function (text, pattern, plain)
   end
 end
 
-util.split = function (text, pattern, plain)
+util.split = function(text, pattern, plain)
   local ret = {}
   for match in util.gsplit(text, pattern, plain) do
     table.insert(ret, match)
@@ -94,7 +94,7 @@ util.split = function (text, pattern, plain)
   return ret
 end
 
-util.last_split = function (s, pat)
+util.last_split = function(s, pat)
   local split = util.split(s,pat)
   return split[#split]
 end

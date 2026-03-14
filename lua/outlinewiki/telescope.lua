@@ -24,7 +24,7 @@ local document_display = entry_display.create {
   },
 }
 
-local function document_entry (entry)
+local function document_entry(entry)
   -- TODO: Attach functions to the Entry so it can be updated
   return {
     value = entry:id(),
@@ -39,7 +39,7 @@ local function document_entry (entry)
         -- { "Col", "Boolean" },
         obj:title(),
       }
-      end,
+    end,
   }
 end
 
@@ -48,33 +48,33 @@ end
 --- vim.api.nvim_buf_attach ??
 --- vim.api.nvim_put
 
-M.open = function (opts)
+M.open = function(opts)
   opts = opts or {}
   opts.find_command = opts.find_command or { "ls" }
   -- make file icon (make_entry.gen_from_file(opts))
   opts.entry_maker = make_entry
   opts.win = vim.api.nvim_get_current_win()
   pickers
-    .new(opts, {
-      prompt_title = "Open Document",
-      finder = finders.new_table{ results = Documents:list(), entry_maker = document_entry },
-      -- previewer = conf.file_previewer(opts),
-      sorter = conf.file_sorter(opts),
-      attach_mappings = function(prompt_bufnr, map)
-        actions.select_default:replace(function()
-          actions.close(prompt_bufnr)
-          local selection = action_state.get_selected_entry()
-          selection.obj:open(opts.win)
-        end)
-        map("n", "<cr>", (function()
-          local selection = action_state.get_selected_entry()
-          print(vim.inspect(opts))
-          print(vim.inspect(selection))
-          return selection
-        end))
-        -- TODO: This works but the changes are not reflected in the picker.
-        --       The code needs some cleanup as well
-        -- map("n", "p", (function()
+  .new(opts, {
+    prompt_title = "Open Document",
+    finder = finders.new_table{ results = Documents:list(), entry_maker = document_entry },
+    -- previewer = conf.file_previewer(opts),
+    sorter = conf.file_sorter(opts),
+    attach_mappings = function(prompt_bufnr, map)
+      actions.select_default:replace(function()
+        actions.close(prompt_bufnr)
+        local selection = action_state.get_selected_entry()
+        selection.obj:open(opts.win)
+      end)
+      map("n", "<cr>", (function()
+        local selection = action_state.get_selected_entry()
+        print(vim.inspect(opts))
+        print(vim.inspect(selection))
+        return selection
+      end))
+      -- TODO: This works but the changes are not reflected in the picker.
+      --       The code needs some cleanup as well
+      -- map("n", "p", (function()
         --   local selection = action_state.get_selected_entry()
         --   if selection.obj:type() == "DOC" then
         --     selection.obj:unpublish()
@@ -89,4 +89,4 @@ M.open = function (opts)
     :find()
 end
 
-return M
+  return M

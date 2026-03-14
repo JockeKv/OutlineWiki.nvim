@@ -10,7 +10,7 @@ local api = require("outlinewiki.api")
 ---Add a Document to the list
 ---@param doc Document
 ---@return boolean
-function Documents: _add (doc)
+function Documents:_add(doc)
   if doc == nil then return false end
   table.insert(self._list, doc)
   return true
@@ -21,7 +21,7 @@ end
 --- If *reload* is true, force the reload from the API
 ---@param reload? boolean
 ---@return Document[]
-function Documents: list (reload)
+function Documents:list(reload)
   if table.maxn(self._list) == 0 or reload then
     -- Reset the list
     self._list = {}
@@ -51,8 +51,8 @@ end
 ---Delete Document **doc**
 ---@param doc Document
 ---@return boolean
-function Documents: delete(doc)
- local res, err = api.Delete("documents", { id = doc:id() })
+function Documents:delete(doc)
+  local res, err = api.Delete("documents", { id = doc:id() })
   if res then
     for i, d in ipairs(self:list()) do
       if d:id() == doc:id() then
@@ -71,7 +71,7 @@ end
 ---List the Documents for Collection **col**
 ---@param col Collection
 ---@return table|Document[]
-function Documents: list_by_collection(col)
+function Documents:list_by_collection(col)
   local list = {}
   for _, doc in ipairs(self:list()) do
     if doc:collection() == col then
@@ -84,7 +84,7 @@ end
 ---List the Documents for parent **parent**
 ---@param parentid string
 ---@return table|Document[]
-function Documents: list_by_parentid(parentid)
+function Documents:list_by_parentid(parentid)
   local list = {}
   for _, doc in ipairs(self:list()) do
     if doc:is_child() and doc:parent():id() == parentid then
@@ -96,14 +96,14 @@ end
 
 ---Returns a completion-table for all Documents
 ---@return table
-function Documents: complete ()
-    local list = {}
-    for _, doc in ipairs(self:list()) do
-      table.insert(list, {
-        title = doc:title(),
-        url = doc:url(),
-      })
-    end
+function Documents:complete ()
+  local list = {}
+  for _, doc in ipairs(self:list()) do
+    table.insert(list, {
+      title = doc:title(),
+      url = doc:url(),
+    })
+  end
   return list
 end
 
@@ -114,7 +114,7 @@ end
 ---Get the Document by id **id**
 ---@param id string
 ---@return nil|Document
-function Documents: get_by_id(id)
+function Documents:get_by_id(id)
   for _, doc in ipairs(self:list()) do
     if doc:id() == id then
       return doc
@@ -126,7 +126,7 @@ end
 ---Get the Document by url **url**
 ---@param url string
 ---@return nil|Document
-function Documents: get_by_url(url)
+function Documents:get_by_url(url)
   for _, doc in ipairs(self:list()) do
     if (doc:url() == url) or (doc.meta.urlId == util.last_split(url, "-")) then
       return doc
@@ -138,7 +138,7 @@ end
 ---Get the Document by filename **filename**
 ---@param filename string
 ---@return nil|Document
-function Documents: get_by_filename(filename)
+function Documents:get_by_filename(filename)
   for _, doc in ipairs(self:list()) do
     if doc:id() == filename then
       return doc

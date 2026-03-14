@@ -49,26 +49,26 @@ local Collection = {
 
 ---Get the Collection id
 ---@return string
-function Collection: id ()
+function Collection:id()
   return self.meta.id
 end
 
 ---Get the Collection title
 ---@return string
-function Collection: title ()
+function Collection:title()
   local title = self.meta.name:gsub("\n", "")
   return title
 end
 
 ---Returns 'COL'
 ---@return string
-function Collection: type ()
+function Collection:type()
   return "COL"
 end
 
 ---Returns the children Document(s) if any or **nil** if none
 ---@return Document[]
-function Collection: documents ()
+function Collection:documents()
   return Documents:list_by_collection(self)
 end
 
@@ -79,15 +79,15 @@ end
 ---@param title string
 ---@return nil|Document
 function Collection: create(title)
-  local Document = require("outlinewiki.object.document")
-  local obj = api.Documents("create", {
-    title = title,
-    collectionId = self.meta.id,
-  })
-  if obj == nil then return nil end
-  local doc = Document(obj)
-  Documents:_add(doc)
-  return doc
+local Document = require("outlinewiki.object.document")
+local obj = api.Documents("create", {
+  title = title,
+  collectionId = self.meta.id,
+})
+if obj == nil then return nil end
+local doc = Document(obj)
+Documents:_add(doc)
+return doc
 end
 
 ---Rename the Collection
@@ -99,7 +99,7 @@ end
 ---
 -- Generating the TreeNode
 
-function Collection: as_TreeNode ()
+function Collection:as_TreeNode()
   local doc_nodes = {}
   for _, doc in ipairs(self:documents()) do
     if not doc:is_child() then
@@ -131,7 +131,7 @@ end
 ---@param endpoint string The endpoint to which the request is sent. Typically 'update'
 ---@param opts table The parameters to send to the API. Is converted to JSON.
 ---@return boolean Returns **true** on success, otherwise **false**
-function Collection:__update (endpoint, opts)
+function Collection:__update(endpoint, opts)
   opts.id = self:id()
 
   local obj, err = api.Collections(endpoint, opts)
@@ -156,7 +156,7 @@ end
 ---Create new Collection instance
 ---@param obj API_Collection
 ---@return Collection
-function Collection:new (obj)
+function Collection:new(obj)
   local o = {}
   setmetatable(o, self)
   self.__index = self

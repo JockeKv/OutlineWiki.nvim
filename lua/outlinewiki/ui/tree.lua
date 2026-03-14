@@ -44,7 +44,7 @@ local tree = NuiTree({
   end,
 })
 
-function tree: refresh (reload)
+function tree:refresh(reload)
   local nodes = {}
   if reload then
     Documents:list(true)

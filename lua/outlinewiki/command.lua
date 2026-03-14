@@ -19,7 +19,7 @@ M.list_commands = function ()
 end
 
 M.run = function (opts)
---  print(vim.inspect(opts))
+  --  print(vim.inspect(opts))
   if M.commands[opts.fargs[1]] then
     M.commands[opts.fargs[1]](opts)
   end
