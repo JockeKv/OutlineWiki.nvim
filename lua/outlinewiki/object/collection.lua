@@ -136,10 +136,10 @@ function Collection:__update (endpoint, opts)
 
   local obj, err = api.Collections(endpoint, opts)
   if not (err == nil) then
-    print("Could not update the Collection: "..err)
+    vim.notify("Could not update the Collection: "..err, vim.log.levels.ERROR, { title = "OutlineWiki" })
     return false
   elseif obj == nil then
-    print("Collection returned as nil")
+    vim.notify("Collection returned as nil", vim.log.levels.ERROR, { title = "OutlineWiki" })
     return false
   end
 

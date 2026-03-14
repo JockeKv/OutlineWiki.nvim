@@ -75,7 +75,7 @@ return function(cwin)
           vim.api.nvim_set_current_win(cwin)
         end
       else
-        print("Could not create Document")
+        vim.notify("Could not create Document", vim.log.levels.ERROR, { title = "OutlineWiki" })
       end
     end
   end, map_options)

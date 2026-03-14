@@ -84,7 +84,9 @@ local function post(endpoint, body)
   if ret.status == 200 then
     return ret.status, ret.data
   else
-    print(ret.status, ret.error..": "..ret.message)
+    vim.notify(ret.status .. " " .. ret.error .. ": " .. ret.message,
+    vim.log.levels.ERROR,
+    { title = "OutlineWiki" })
     return ret.status, ret.error..": "..ret.message
   end
 end

@@ -347,14 +347,16 @@ function Document:as_TreeNode ()
       local lines = vim.api.nvim_buf_get_lines(buf.bufnr, 0, -1, false)
       local content = table.concat(lines, "\n")
 
-      if string.len(content) == 0 then print("No content") end
+      if string.len(content) == 0 then
+        vim.notify("No content", vim.log.levels.INFO, { title = "OutlineWiki" })
+      end
 
       if self:__update("update",{ text = content }) then
         vim.api.nvim_set_option_value("modified", false, {buf = buf.bufnr})
-        print("Document saved!")
+        vim.notify("Document saved!", vim.log.levels.INFO, { title = "OutlineWiki" })
         return true
       else
-        print("Failed to save document")
+        vim.notify("Failed to save document", vim.log.levels.ERROR, { title = "OutlineWiki" })
         return false
       end
     end
@@ -375,10 +377,10 @@ function Document:as_TreeNode ()
 
     local obj, err = api.Documents(endpoint, opts)
     if not (err == nil) then
-      print("Could not update the document: "..err)
+      vim.notify("Could not update the document: " .. err, vim.log.levels.ERROR, { title = "OutlineWiki" })
       return false
     elseif obj == nil then
-      print("Document returned as nil")
+      vim.notify("Document returned as nil", vim.log.levels.WARN, { title = "OutlineWiki" })
       return false
     end
 
@@ -396,10 +398,10 @@ function Document:as_TreeNode ()
 
     local obj, err = api.Documents("info", opts)
     if not (err == nil) then
-      print("Could not retreive the document: "..err)
+      vim.notify("Could not retreive the document: " .. err, vim.log.levels.ERROR)
       return nil
     elseif obj == nil then
-      print("Document returned as nil")
+      vim.notify("Document returned as nil", vim.log.levels.WARN)
       return nil
     end
 
