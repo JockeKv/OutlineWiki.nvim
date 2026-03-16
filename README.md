@@ -27,6 +27,13 @@ Outlinewiki uses NUI to create windows, popups etc
 Outlinewiki uses treesitters markdown syntax.
 Treesitter is also used for the "LSP".
 
+### Snacks
+
+> Active with 'integrations.snacks = true' (default)
+
+OutlineWiki comes with a snacks picker to open documents.
+Open with ':OutlineWiki snacks'
+
 ### Telescope
 
 > Active with 'integrations.telescope = true' (default)
@@ -52,8 +59,9 @@ The "LSP" also uses LuaSnip to generate links to other Outline documents
   dependencies = {
     'nvim-lua/plenary.nvim', -- Required
     'MunifTanjim/nui.nvim', -- Required
+    'nvim-treesitter/nvim-treesitter', -- Optional, recommended
     'nvim-telescope/telescope.nvim', -- Optional
-    'nvim-treesitter/nvim-treesitter', -- Optional
+    "folke/snacks.nvim", -- Optional
     'L3MON4D3/LuaSnip', -- Optional
   },
   opts = {
@@ -61,9 +69,10 @@ The "LSP" also uses LuaSnip to generate links to other Outline documents
     token = "token", -- Your access token
     lsp = true, -- Enable the build-in "LSP-server"
     integrations = {
-      telescope = true,
-      luasnip = true,
-      treesitter = true,
+      treesitter = true, -- Enable treesitter
+      snacks = true,     -- Enable snacks picker
+      telescope = true,  -- Enable telescope picker
+      luasnip = true,    -- Enable lusanip integration
     }
   },
 }

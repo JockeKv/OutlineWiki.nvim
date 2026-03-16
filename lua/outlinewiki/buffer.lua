@@ -5,7 +5,7 @@ local M = {}
 
 -- Override the default LSP handler
 --
-if Config.lsp then
+if Config.lsp and Config.integrations.treesitter then
   require("outlinewiki.lsp")
 end
 

@@ -6,7 +6,7 @@ local M = {
     telescope = true,
     luasnip = true,
     treesitter = true,
-    snacks = true
+    snacks = true,
   }
 }
 
