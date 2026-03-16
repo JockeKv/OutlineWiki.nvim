@@ -47,14 +47,14 @@ end
 ---@param opts table
 ---@return integer
 util.open_buffer = function(name, content, opts)
-  -- local buf = vim.api.nvim_create_buf(true, false)
+  -- Create a new buffer if it does not already exist
   local buf = vim.fn.bufadd(name)
-
-  -- vim.api.nvim_set_current_buf(buf)
-
+  -- Make sure the buffer is loaded
+  vim.fn.bufload(buf)
+  -- Set content and opts
   util.set_buffer(buf,content, opts)
-
-  -- vim.api.nvim_exec_autocmds("BufReadPost", { buffer = buf })
+  -- Run Post autocmd
+  vim.api.nvim_exec_autocmds("BufReadPost", { buffer = buf })
 
   return buf
 end

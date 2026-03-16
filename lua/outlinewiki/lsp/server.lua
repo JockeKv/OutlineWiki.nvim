@@ -50,8 +50,19 @@ server.handleRequest = function (method, params, callback)
       callback(nil,nil,ctx)
     end
   elseif method == 'textDocument/definition' then
-    local doc = lsp_util.getCursorDoc()
+    local doc, header = lsp_util.getCursorDoc()
     if doc then
+      if header then
+        local pos = lsp_util.getHeaderPos(doc, header)
+        if pos then
+          callback(nil,{
+            uri = "outlinewiki://"..doc:url(),
+            range = pos,
+          },
+          ctx)
+          return
+        end
+      end
       callback(nil,{
         uri = "outlinewiki://"..doc:url(),
         range = {
@@ -60,23 +71,44 @@ server.handleRequest = function (method, params, callback)
         },
       },
       ctx)
+    elseif header then
+      doc = lsp_util.getCurrentDoc()
+      print(doc and doc:title() or "No doc")
+      if not doc then return end
+      local pos = lsp_util.getHeaderPos(doc, header)
+      if pos then
+        callback(nil,{
+          uri = "outlinewiki://"..doc:url(),
+          range = pos,
+        },
+        ctx)
+        return
+      end
     end
   elseif method == 'textDocument/references' then
     local doc = lsp_util.getCursorDoc()
     if doc then
-      print("References: "..doc:title())
       local backlinks = doc:backlinks()
-      print("Backlinks: "..#backlinks)
       if #backlinks > 0 then
         local result = {}
         for _, backlink in ipairs(backlinks) do
-          table.insert(result, {
-            uri = "outlinewiki://"..backlink:url(),
-            range = {
-              [ "start" ] = { line = 0, character = 0 },
-              [ "end" ] = { line = 0, character = 0 },
-            },
-          })
+          local positions = lsp_util.getLinkPos(doc, backlink)
+          if positions then
+            for _, pos in ipairs(positions) do
+              table.insert(result, {
+                uri = "outlinewiki://"..backlink:url(),
+                range = pos,
+              })
+            end
+          else
+            table.insert(result, {
+              uri = "outlinewiki://"..backlink:url(),
+              range = {
+                [ "start" ] = { line = 0, character = 0 },
+                [ "end" ] = { line = 0, character = 0 },
+              },
+            })
+          end
         end
         callback(nil,result,ctx)
       end

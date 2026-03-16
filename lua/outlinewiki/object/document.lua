@@ -294,28 +294,19 @@ function Document:as_TreeNode ()
   ---@return integer
   function Document:open(win)
     if self.bufnr and vim.fn.bufexists(self.bufnr) then
-      -- local ok, _ = pcall(vim.api.nvim_get_option_value,"outline_id", {buf = self.bufnr})
-      -- if ok then
-      -- Check if buffer is valid
       if win and vim.api.nvim_win_is_valid(win) then
         vim.api.nvim_win_set_buf(win, self.bufnr)
         return self.bufnr
       end
-      vim.api.nvim_set_current_buf(self.bufnr)
-      -- vim.api.nvim_win_set_buf(win, self.bufnr)
       return self.bufnr
-      -- end
     end
 
     -- Create a new buffer
     self.bufnr = util.open_buffer(self:filename(), self:content(), {
       filetype = "outlinewiki",
-      buftype = "acwrite",
-      buflisted = true,
+      buftype = "", -- 'acwrite' breaks Trouble etc. Leave empty (normal file) if possible
+      buflisted = true
     })
-
-
-    vim.api.nvim_buf_set_var(self.bufnr, "outline_id", self:id())
 
     vim.api.nvim_clear_autocmds({event = "BufWriteCmd", buffer = self.bufnr})
     vim.api.nvim_create_autocmd({"BufWriteCmd"},{
@@ -329,7 +320,6 @@ function Document:as_TreeNode ()
       vim.api.nvim_win_set_buf(win, self.bufnr)
       return self.bufnr
     end
-    vim.api.nvim_set_current_buf(self.bufnr)
     return self.bufnr
   end
 
@@ -354,7 +344,6 @@ function Document:as_TreeNode ()
   function Document:save ()
     local buf = vim.fn.getbufinfo(self.bufnr)[1]
     if buf.changed > 0 then
-      -- print("Saving document "..opts.file.." with id "..b.variables.outline_id)
       local lines = vim.api.nvim_buf_get_lines(buf.bufnr, 0, -1, false)
       local content = table.concat(lines, "\n")
 
