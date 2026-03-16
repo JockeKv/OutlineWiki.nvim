@@ -37,6 +37,7 @@ server.handleRequest = function (method, params, callback)
         hoverProvider = true,
         declarationProvider = true,
         definitionProvider = true,
+        referencesProvider = true,
       }
     },ctx)
   elseif method == "textDocument/hover" then
@@ -51,8 +52,36 @@ server.handleRequest = function (method, params, callback)
   elseif method == 'textDocument/definition' then
     local doc = lsp_util.getCursorDoc()
     if doc then
-      doc:open(vim.api.nvim_get_current_win())
+      callback(nil,{
+        uri = "outlinewiki://"..doc:url(),
+        range = {
+          [ "start" ] = { line = 0, character = 0 },
+          [ "end" ] = { line = 0, character = 0 },
+        },
+      },
+      ctx)
     end
+  elseif method == 'textDocument/references' then
+    local doc = lsp_util.getCursorDoc()
+    if doc then
+      print("References: "..doc:title())
+      local backlinks = doc:backlinks()
+      print("Backlinks: "..#backlinks)
+      if #backlinks > 0 then
+        local result = {}
+        for _, backlink in ipairs(backlinks) do
+          table.insert(result, {
+            uri = "outlinewiki://"..backlink:url(),
+            range = {
+              [ "start" ] = { line = 0, character = 0 },
+              [ "end" ] = { line = 0, character = 0 },
+            },
+          })
+        end
+        callback(nil,result,ctx)
+      end
+    end
+  else
     callback(nil,nil,ctx)
   end
 end

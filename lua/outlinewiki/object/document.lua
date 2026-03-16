@@ -20,7 +20,7 @@ local Documents = require("outlinewiki.documents")
 ---@field revision integer
 ---@field createdAt string
 ---@field updatedAt string
----@field publishedAt string
+---@field publishedAt string|vim.NIL
 ---@field archivedAt string
 ---@field deletedAt string
 
@@ -105,6 +105,21 @@ end
 function Document:collection ()
   local col = Collections:get_by_id(self.meta.collectionId)
   return col
+end
+
+---Return a list of documents referencing this document
+---@return Document[]
+function Document:backlinks()
+  local docs = {}
+  local list = api.Documents("list", { limit = 100, backlinkDocumentId = self.meta.id })
+  if list == nil then return {} end
+  -- Create the Document objects
+  -- Put the Documents in _list
+  for _, doc in ipairs(list) do
+    local Doc = Document
+    table.insert(docs,Doc:new(doc))
+  end
+  return docs
 end
 
 ---Returns the Parent Document or nil if none.
